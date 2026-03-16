@@ -1,0 +1,14 @@
+{
+  "name": "TPI Assessment Manager",
+  "short_name": "TPI評価",
+  "description": "Disport World TPI Body-Swing Connection フィジカルスクリーニング管理",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e0d0b",
+  "theme_color": "#0e0d0b",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

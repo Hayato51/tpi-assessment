@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0e0d0b"/>
+  <text x="256" y="200" font-family="Arial,sans-serif" font-size="120" font-weight="800" fill="#c9a96e" text-anchor="middle" dominant-baseline="central">TPI</text>
+  <text x="256" y="330" font-family="Arial,sans-serif" font-size="48" font-weight="600" fill="#6b6560" text-anchor="middle" dominant-baseline="central">DISPORT</text>
+  <text x="256" y="390" font-family="Arial,sans-serif" font-size="36" font-weight="400" fill="#444" text-anchor="middle" dominant-baseline="central">WORLD</text>
+</svg>
