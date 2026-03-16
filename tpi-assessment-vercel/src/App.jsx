@@ -102,9 +102,32 @@ const PHI=[
 
 const FI={"S-Posture":"アドレス時に腰椎過前弯","C-Posture":"アドレス時に胸椎過後弯","Loss of Posture":"スイング中に前傾角変化","Early Extension":"ダウンスイングで骨盤前方突出","Sway":"BSで骨盤が右に移動","Slide":"DSで骨盤が左に過度に移動","Reverse Spine Angle":"トップで体幹が目標方向に傾く","Flat Shoulder Plane":"肩の回旋面が浅い","Flying Elbow":"トップで後方肘が過外転","Chicken Wing":"FTで前方肘が曲がる","Over the Top":"DSがアウトサイドイン軌道","Casting":"DS初期でコックが解ける","Early Release":"インパクト前にコック完全解放","Scoop":"インパクトで手首背屈","Hanging Back":"FTで体重移動不十分","Slice":"スライス回転"};
 
-/* ═══════ STORAGE ═══════ */
-const ld=async(k,fb)=>{try{const r=localStorage.getItem(k);return r?JSON.parse(r):fb;}catch{return fb;}};
-const sv=async(k,d)=>{try{localStorage.setItem(k,JSON.stringify(d));}catch(e){console.error(e);}};
+/* ═══════ SUPABASE ═══════ */
+const SB_URL="https://zjxghipbadjboethnjde.supabase.co";
+const SB_KEY="sb_publishable_pI4yhkikEPyLDWd09vdUIg_XitxdA1s";
+const hd={"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Content-Type":"application/json"};
+
+const db={
+  async getClients(){
+    const r=await fetch(`${SB_URL}/rest/v1/clients?select=*&order=created_at.asc`,{headers:hd});
+    return r.ok?await r.json():[];
+  },
+  async addClient(c){
+    const r=await fetch(`${SB_URL}/rest/v1/clients`,{method:"POST",headers:{...hd,"Prefer":"return=representation"},body:JSON.stringify({id:c.id,name:c.name,age:c.age,goal:c.goal,handicap:c.handicap})});
+    return r.ok;
+  },
+  async deleteClient(id){
+    await fetch(`${SB_URL}/rest/v1/clients?id=eq.${id}`,{method:"DELETE",headers:hd});
+  },
+  async getAssessments(clientId){
+    const r=await fetch(`${SB_URL}/rest/v1/assessments?client_id=eq.${clientId}&select=*&order=date.desc`,{headers:hd});
+    return r.ok?await r.json():[];
+  },
+  async addAssessment(a){
+    const r=await fetch(`${SB_URL}/rest/v1/assessments`,{method:"POST",headers:{...hd,"Prefer":"return=representation"},body:JSON.stringify({id:a.id,client_id:a.clientId,date:a.date,scores:a.scores,notes:a.notes,sides:a.sides})});
+    return r.ok;
+  }
+};
 
 /* ═══════ STYLES ═══════ */
 const G="#c9a96e";
@@ -452,11 +475,40 @@ function History({client,asm}){
 /* ═══════════════ MAIN ═══════════════ */
 export default function App(){
   const[pg,setPg]=useState("clients");const[cls,setCls]=useState([]);const[asm,setAsm]=useState({});const[sel,setSel]=useState(null);const[loading,setLoading]=useState(true);
-  useEffect(()=>{(async()=>{const c=await ld("tpi-clients",[]);const m={};for(const cl of c){m[cl.id]=await ld(`tpi-assess:${cl.id}`,[]);cl.assessmentCount=m[cl.id].length;}setCls(c);setAsm(m);setLoading(false);})();},[]);
-  const saveCls=async c=>{setCls(c);await sv("tpi-clients",c);};
-  const addCl=async cl=>{await saveCls([...cls,{...cl,assessmentCount:0}]);setAsm(p=>({...p,[cl.id]:[]}));};
-  const delCl=async id=>{await saveCls(cls.filter(c=>c.id!==id));setAsm(p=>{const n={...p};delete n[id];return n;});try{localStorage.removeItem(`tpi-assess:${id}`);}catch{}if(sel===id)setSel(null);};
-  const saveA=async a=>{const u=[...(asm[a.clientId]||[]),a];setAsm(p=>({...p,[a.clientId]:u}));await sv(`tpi-assess:${a.clientId}`,u);await saveCls(cls.map(c=>c.id===a.clientId?{...c,assessmentCount:u.length}:c));};
+
+  // Load all clients and their assessments from Supabase
+  useEffect(()=>{(async()=>{
+    try{
+      const clients=await db.getClients();
+      const m={};
+      for(const cl of clients){
+        const assessments=await db.getAssessments(cl.id);
+        m[cl.id]=assessments.map(a=>({...a,clientId:a.client_id}));
+        cl.assessmentCount=assessments.length;
+      }
+      setCls(clients);setAsm(m);
+    }catch(e){console.error("Load error:",e);}
+    setLoading(false);
+  })();},[]);
+
+  const addCl=async cl=>{
+    const ok=await db.addClient(cl);
+    if(ok){setCls(p=>[...p,{...cl,assessmentCount:0}]);setAsm(p=>({...p,[cl.id]:[]}));}
+  };
+  const delCl=async id=>{
+    await db.deleteClient(id);
+    setCls(p=>p.filter(c=>c.id!==id));
+    setAsm(p=>{const n={...p};delete n[id];return n;});
+    if(sel===id)setSel(null);
+  };
+  const saveA=async a=>{
+    const ok=await db.addAssessment(a);
+    if(ok){
+      const u=[...(asm[a.clientId]||[]),{...a,client_id:a.clientId}];
+      setAsm(p=>({...p,[a.clientId]:u}));
+      setCls(p=>p.map(c=>c.id===a.clientId?{...c,assessmentCount:u.length}:c));
+    }
+  };
   const client=cls.find(c=>c.id===sel);
   if(loading)return(<div style={{minHeight:"100vh",background:"#0e0d0b",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',sans-serif"}}><div style={{textAlign:"center"}}><div style={{fontSize:28,animation:"pulse 1.5s infinite"}}>⛳</div><div style={{color:G,fontSize:14,marginTop:8}}>読み込み中...</div></div><style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style></div>);
   return(
