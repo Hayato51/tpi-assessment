@@ -104,7 +104,7 @@ const FI={"S-Posture":"アドレス時に腰椎過前弯","C-Posture":"アドレ
 
 /* ═══════ SUPABASE ═══════ */
 const SB_URL="https://zjxghipbadjboethnjde.supabase.co";
-const SB_KEY="sb_publishable_pI4yhkikEPyLDWd09vdUIg_XitxdA1s";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqeGdoaXBiYWRqYm9ldGhuamRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NDI3OTEsImV4cCI6MjA4OTIxODc5MX0.PvzE8SaK-i6vLLXBqjj3OnXkBmG2l2jYuP-dSDw8PV4";
 const hd={"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Content-Type":"application/json"};
 
 const db={
